@@ -22,12 +22,13 @@
   body.dark {
     --bg: #000000; --surface: #000000; --ink: #FFFFFF; --muted: #8A8A8A; --line: #262626;
   }
-  #app { max-width: 480px; margin: 0 auto; position: relative; padding-bottom: 90px; min-height: 100vh; background: var(--bg); }
+  #app { max-width: 480px; margin: 0 auto; position: relative; padding-bottom: 30px; min-height: 100vh; background: var(--bg); }
   .header { padding: 26px 20px 18px; display: flex; align-items: baseline; justify-content: space-between; }
   .header h1 { font-weight: 600; font-size: 22px; margin: 0; }
   .header-right { display: flex; align-items: center; gap: 12px; }
   .count { font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
   .theme-toggle { background: none; border: 1px solid var(--line); border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; color: var(--ink); cursor: pointer; }
+  .add-header-btn { background: var(--accent); border: none; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; font-size: 20px; line-height: 1; }
   .warning-banner { margin: 0 20px 14px; padding: 10px 14px; border: 1px solid var(--danger); border-radius: 10px; font-size: 12px; color: var(--danger); line-height: 1.4; }
   .searchbar { margin: 0 20px 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); padding: 8px 2px; }
   .searchbar input { border: none; outline: none; background: transparent; flex: 1; font-size: 14px; color: var(--ink); font-family: inherit; }
@@ -35,18 +36,23 @@
   .filters { display: flex; gap: 8px; padding: 0 20px 18px; overflow-x: auto; }
   .filters select { font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; background: transparent; border: 1px solid var(--line); border-radius: 20px; padding: 7px 12px; color: var(--ink); flex-shrink: 0; font-family: inherit; }
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-  .card { background: var(--bg); cursor: pointer; }
-  .card .photo { width: 100%; aspect-ratio: 1; background: var(--bg); display: flex; align-items: center; justify-content: center; overflow: hidden; }
-  .card .photo img { width: 100%; height: 100%; object-fit: cover; }
+  .card { background: var(--bg); cursor: pointer; display: flex; flex-direction: column; }
+  .card .photo { width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--bg); padding: 12px 12px 0; }
+  .card .photo img { display: block; max-width: 100%; }
+  .card .photo .empty { color: var(--muted); opacity: 0.4; padding: 40px 0; }
   .card .info { padding: 12px 14px 16px; }
   .card .cat { font-size: 9.5px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
   .card .brand { font-weight: 600; font-size: 14px; line-height: 1.25; margin-bottom: 8px; }
   .card .swatches { display: flex; gap: 4px; }
   .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); flex-shrink: 0; }
+  .color-bars { display: flex; flex-direction: column; gap: 2px; background: var(--bg); margin-top: 2px; }
+  .color-bar { padding: 12px 16px; font-size: 13px; font-weight: 600; letter-spacing: 0.02em; }
+  .suggestions { position: absolute; top: 100%; left: 0; right: 0; background: var(--bg); border: 1px solid var(--line); border-top: none; z-index: 20; max-height: 160px; overflow-y: auto; display: none; }
+  .suggestions.show { display: block; }
+  .suggestions div { padding: 10px 12px; font-size: 14px; cursor: pointer; }
+  .suggestions div:hover, .suggestions div.active { background: var(--line); }
   .empty-state { text-align: center; padding: 70px 30px; color: var(--muted); }
   .empty-state .title { font-size: 17px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
-  .fab { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%); max-width: 480px; width: calc(100% - 40px); display: flex; justify-content: flex-end; padding-right: 14px; }
-  .fab-main { background: var(--accent); color: #fff; border: none; border-radius: 50%; width: 54px; height: 54px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 22px rgba(59,89,152,0.4); cursor: pointer; font-size: 26px; line-height: 1; }
   .formwrap { padding: 0 20px; }
   .field { margin-bottom: 20px; }
   .field label { display: block; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
@@ -71,8 +77,11 @@
   .topbar { display: flex; align-items: center; justify-content: space-between; padding: 20px; }
   .icon-btn { background: none; border: 1px solid var(--line); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: var(--ink); cursor: pointer; font-size: 16px; }
   .save-btn { background: var(--accent); color: #fff; border: none; border-radius: 20px; padding: 9px 20px; font-weight: 600; font-size: 13.5px; cursor: pointer; font-family: inherit; }
-  .detail-photo { width: 100%; aspect-ratio: 1; background: var(--bg); overflow: hidden; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: center; }
-  .detail-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .detail-photo { width: 100%; background: var(--bg); overflow: hidden; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: center; padding: 10px; cursor: zoom-in; }
+  .detail-photo img { max-width: 100%; max-height: 70vh; display: block; }
+  .zoom-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 100; display: flex; align-items: center; justify-content: center; cursor: zoom-out; }
+  .zoom-overlay img { max-width: 96vw; max-height: 96vh; object-fit: contain; }
+  .zoom-close { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.15); border: none; color: #fff; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; }
   .detail-thumbs { display: flex; gap: 8px; padding: 12px 20px; overflow-x: auto; }
   .detail-thumbs img { width: 54px; height: 54px; object-fit: cover; border: 1px solid var(--line); }
   .detail-body { padding: 8px 20px 20px; }
@@ -178,7 +187,7 @@ function loadAll() {
     };
   }
   const d = store.get("dark-mode");
-  state.dark = d === "true";
+  state.dark = d === null ? true : d === "true"; // defaults to dark mode until the user explicitly picks light
   document.body.classList.toggle("dark", state.dark);
 }
 
@@ -243,12 +252,58 @@ function swatchHtml(name, size) {
   return `<span class="swatch" style="width:${size}px;height:${size}px;background:${c.hex};border:${border}"></span>`;
 }
 
+function contrastText(hex) {
+  if (!hex || hex.indexOf("linear-gradient") === 0) return "#1A1A1A";
+  const h = hex.replace("#", "");
+  const r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
+  const lum = (0.299*r + 0.587*g + 0.114*b) / 255;
+  return lum > 0.55 ? "#1A1A1A" : "#FFFFFF";
+}
+
+function colorBarsHtml(colorNames) {
+  if (!colorNames || !colorNames.length) return `<div class="detail-row"><span class="k">Colors</span><span class="v">—</span></div>`;
+  const bars = colorNames.map(name => {
+    const c = COLORS.find(x => x.name === name);
+    const bg = c ? c.hex : "#999999";
+    const txt = contrastText(bg);
+    return `<div class="color-bar" style="background:${bg};color:${txt};">${esc(name)}</div>`;
+  }).join("");
+  return `<div class="detail-row" style="display:block;"><span class="k">Colors</span></div><div class="color-bars">${bars}</div>`;
+}
+
 function render() {
   const app = document.getElementById("app");
   if (state.view === "browse") app.innerHTML = renderBrowse();
   else if (state.view === "detail") app.innerHTML = renderDetail();
   else if (state.view === "form") app.innerHTML = renderForm();
   attachHandlers();
+  if (state.view === "browse") matchGridRowHeights();
+}
+
+// Shows the full, uncropped photo for each item. Rows are matched to their
+// tallest photo's height so items line up — but no image is ever stretched
+// beyond 102% of its own true resolution, so nothing goes soft to do it.
+function matchGridRowHeights() {
+  const imgs = Array.from(document.querySelectorAll(".grid .card .photo img"));
+  if (!imgs.length) return;
+  const cols = 2;
+  const MAX_UPSCALE = 1.02;
+  const BASELINE = 0.75;
+  Promise.all(imgs.map(img => img.complete
+    ? Promise.resolve()
+    : new Promise(res => { img.onload = res; img.onerror = res; })
+  )).then(() => {
+    for (let i = 0; i < imgs.length; i += cols) {
+      const rowImgs = imgs.slice(i, i + cols).filter(img => img.naturalHeight > 0);
+      if (!rowImgs.length) continue;
+      const target = Math.max(...rowImgs.map(img => img.naturalHeight * BASELINE));
+      rowImgs.forEach(img => {
+        const capped = Math.min(target, img.naturalHeight * MAX_UPSCALE);
+        img.style.height = capped + "px";
+        img.style.width = "auto";
+      });
+    }
+  });
 }
 
 function filteredItems() {
@@ -283,6 +338,7 @@ function renderBrowse() {
       <div class="header-right">
         <span class="count">${state.items.length} ITEM${state.items.length===1?'':'S'}</span>
         <button class="theme-toggle" id="theme-toggle">${state.dark ? "&#9728;" : "&#9789;"}</button>
+        <button class="add-header-btn" id="add-btn">+</button>
       </div>
     </div>
     <div class="searchbar">
@@ -299,7 +355,6 @@ function renderBrowse() {
       <button id="import-btn">&#8679; IMPORT</button>
       <input type="file" id="import-file" accept="application/json" hidden />
     </div>
-    <div class="fab"><button class="fab-main" id="add-btn">+</button></div>
   `;
 }
 
@@ -308,16 +363,19 @@ function renderDetail() {
   return `
     <div class="topbar">
       <button class="icon-btn" id="back-btn">&#8592;</button>
-      <button class="save-btn" id="edit-btn">Edit</button>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="theme-toggle" id="theme-toggle-detail">${state.dark ? "&#9728;" : "&#9789;"}</button>
+        <button class="save-btn" id="edit-btn">Edit</button>
+      </div>
     </div>
-    <div class="detail-photo">${it.photos && it.photos[0] ? `<img src="${it.photos[0]}"/>` : `<span style="color:var(--muted);font-size:36px;">&#128247;</span>`}</div>
+    <div class="detail-photo" ${it.photos && it.photos[0] ? `id="detail-photo-zoom"` : ""}>${it.photos && it.photos[0] ? `<img src="${it.photos[0]}"/>` : `<span style="color:var(--muted);font-size:36px;">&#128247;</span>`}</div>
     ${it.photos && it.photos.length>1 ? `<div class="detail-thumbs">${it.photos.map(p=>`<img src="${p}"/>`).join("")}</div>` : ""}
     <div class="detail-body">
       <div class="detail-cat">${esc(it.category)}${it.subcategory?` · ${esc(it.subcategory)}`:''}</div>
       <div class="detail-brand">${esc(it.brand || "Untitled item")}</div>
       <div class="detail-row"><span class="k">Size</span><span class="v">${esc(it.size)||'—'}</span></div>
-      <div class="detail-row"><span class="k">Colors</span><span class="v">${(it.colors||[]).length ? it.colors.map(c=>`<span style="display:flex;align-items:center;gap:4px;">${swatchHtml(c,11)} ${esc(c)}</span>`).join("") : '—'}</span></div>
-      <div class="detail-row"><span class="k">Fabric</span><span class="v">${(it.fabric||[]).length ? esc(it.fabric.map(f=>`${f.percent?f.percent+'% ':''}${f.material}`).join(", ")) : '—'}</span></div>
+      ${colorBarsHtml(it.colors)}
+      <div class="detail-row"><span class="k">Fabric</span><span class="v">${(it.fabric||[]).length ? esc(it.fabric.map(f=>f.material).join(", ")) : '—'}</span></div>
       <div class="detail-actions">
         <button id="edit-btn2">&#9998; Edit</button>
         <button class="danger" id="delete-btn">&#128465; Delete</button>
@@ -330,15 +388,12 @@ function renderForm() {
   const f = state.activeItem;
   const catOptions = `<option value="">Select category</option>` + state.taxonomy.categories.map(c=>`<option value="${esc(c)}" ${f.category===c?'selected':''}>${esc(c)}</option>`).join("");
   const subOptions = `<option value="">Select type</option>` + state.taxonomy.subcategories.map(c=>`<option value="${esc(c)}" ${f.subcategory===c?'selected':''}>${esc(c)}</option>`).join("");
-  const brandListId = "brand-datalist";
-  const brandOptions = state.taxonomy.brands.map(b=>`<option value="${esc(b)}">`).join("");
   const photosHtml = (f.photos||[]).map((p,i)=>`
       <div class="photo-thumb"><img src="${p}"/><button class="rm" data-rmphoto="${i}">&times;</button></div>
     `).join("") + `<div class="photo-add" id="photo-add-btn">+</div><input type="file" id="photo-input" accept="image/*" multiple hidden />`;
   const fabricHtml = (f.fabric||[]).map((row,i)=>`
       <div class="fabric-row">
         <input type="text" placeholder="Material (e.g. Wool)" data-fabric-material="${i}" value="${esc(row.material)}" />
-        <input type="number" placeholder="%" data-fabric-percent="${i}" value="${esc(row.percent)}" />
         <button data-rmfabric="${i}">&#128465;</button>
       </div>`).join("");
   const colorGrid = COLORS.map(c => `
@@ -349,15 +404,18 @@ function renderForm() {
   return `
     <div class="topbar">
       <button class="icon-btn" id="cancel-btn">&times;</button>
-      <button class="save-btn" id="save-btn">Save</button>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="theme-toggle" id="theme-toggle-form">${state.dark ? "&#9728;" : "&#9789;"}</button>
+        <button class="save-btn" id="save-btn">Save</button>
+      </div>
     </div>
     <div class="formwrap">
       <div class="field"><label>Photos</label><div class="photo-upload">${photosHtml}</div></div>
       <div class="field"><label>Category</label><select id="f-category">${catOptions}</select></div>
       <div class="field"><label>Sweater Type</label><select id="f-subcategory">${subOptions}</select></div>
-      <div class="field"><label>Brand</label>
-        <input type="text" id="f-brand" list="${brandListId}" value="${esc(f.brand)}" placeholder="e.g. Missoni" />
-        <datalist id="${brandListId}">${brandOptions}</datalist>
+      <div class="field" style="position:relative;"><label>Brand</label>
+        <input type="text" id="f-brand" autocomplete="off" value="${esc(f.brand)}" placeholder="e.g. Missoni" />
+        <div id="brand-suggestions" class="suggestions"></div>
       </div>
       <div class="field"><label>Size</label><input type="text" id="f-size" value="${esc(f.size)}" placeholder="e.g. Large, EU 50, 42R" /></div>
       <div class="field"><label>Colors ${f.colors.length?`(${f.colors.length} selected)`:''}</label><div class="color-grid">${colorGrid}</div></div>
@@ -366,14 +424,16 @@ function renderForm() {
   `;
 }
 
+function toggleDark() {
+  state.dark = !state.dark;
+  store.set("dark-mode", String(state.dark));
+  document.body.classList.toggle("dark", state.dark);
+  render();
+}
+
 function attachHandlers() {
   if (state.view === "browse") {
-    document.getElementById("theme-toggle").onclick = () => {
-      state.dark = !state.dark;
-      store.set("dark-mode", String(state.dark));
-      document.body.classList.toggle("dark", state.dark);
-      render();
-    };
+    document.getElementById("theme-toggle").onclick = toggleDark;
     document.getElementById("search-input").oninput = (e) => { state.query = e.target.value; render(); document.getElementById("search-input").focus(); document.getElementById("search-input").setSelectionRange(state.query.length, state.query.length); };
     document.getElementById("filter-category").onchange = (e) => { state.filterCategory = e.target.value; render(); };
     document.getElementById("filter-color").onchange = (e) => { state.filterColor = e.target.value; render(); };
@@ -390,17 +450,49 @@ function attachHandlers() {
     document.getElementById("import-btn").onclick = () => document.getElementById("import-file").click();
     document.getElementById("import-file").onchange = handleImport;
   } else if (state.view === "detail") {
+    document.getElementById("theme-toggle-detail").onclick = toggleDark;
     document.getElementById("back-btn").onclick = () => { state.view = "browse"; render(); };
+    const zoomEl = document.getElementById("detail-photo-zoom");
+    if (zoomEl) {
+      zoomEl.onclick = () => {
+        const overlay = document.createElement("div");
+        overlay.className = "zoom-overlay";
+        overlay.innerHTML = `<img src="${state.activeItem.photos[0]}"/><button class="zoom-close">&times;</button>`;
+        overlay.onclick = () => overlay.remove();
+        document.body.appendChild(overlay);
+      };
+    }
     const goEdit = () => { state.editingId = state.activeItem.id; state.activeItem = JSON.parse(JSON.stringify(state.activeItem)); state.view = "form"; render(); };
     document.getElementById("edit-btn").onclick = goEdit;
     document.getElementById("edit-btn2").onclick = goEdit;
     document.getElementById("delete-btn").onclick = () => { deleteItem(state.activeItem.id); state.view = "browse"; render(); };
   } else if (state.view === "form") {
     const f = state.activeItem;
+    document.getElementById("theme-toggle-form").onclick = toggleDark;
     document.getElementById("cancel-btn").onclick = () => { state.view = state.editingId ? "detail" : "browse"; render(); };
     document.getElementById("f-category").onchange = (e) => f.category = e.target.value;
     document.getElementById("f-subcategory").onchange = (e) => f.subcategory = e.target.value;
-    document.getElementById("f-brand").oninput = (e) => f.brand = e.target.value;
+    (function setupBrandAutocomplete() {
+      const input = document.getElementById("f-brand");
+      const box = document.getElementById("brand-suggestions");
+      input.oninput = (e) => {
+        f.brand = e.target.value;
+        const q = e.target.value.trim().toLowerCase();
+        if (!q) { box.classList.remove("show"); box.innerHTML = ""; return; }
+        const matches = state.taxonomy.brands.filter(b => b.toLowerCase().includes(q) && b.toLowerCase() !== q).slice(0, 6);
+        if (!matches.length) { box.classList.remove("show"); box.innerHTML = ""; return; }
+        box.innerHTML = matches.map(b => `<div data-pick="${esc(b)}">${esc(b)}</div>`).join("");
+        box.classList.add("show");
+        box.querySelectorAll("[data-pick]").forEach(el => el.onclick = () => {
+          input.value = el.dataset.pick;
+          f.brand = el.dataset.pick;
+          box.classList.remove("show");
+          box.innerHTML = "";
+        });
+      };
+      input.onblur = () => setTimeout(() => box.classList.remove("show"), 150);
+      input.onfocus = (e) => { if (e.target.value.trim()) input.oninput(e); };
+    })();
     document.getElementById("f-size").oninput = (e) => f.size = e.target.value;
     document.querySelectorAll("[data-color]").forEach(el => el.onclick = () => {
       const name = el.dataset.color;
@@ -408,10 +500,9 @@ function attachHandlers() {
       if (idx >= 0) f.colors.splice(idx,1); else f.colors.push(name);
       render();
     });
-    document.getElementById("add-fabric").onclick = () => { f.fabric.push({material:"",percent:""}); render(); };
+    document.getElementById("add-fabric").onclick = () => { f.fabric.push({material:""}); render(); };
     document.querySelectorAll("[data-rmfabric]").forEach(el => el.onclick = () => { f.fabric.splice(+el.dataset.rmfabric,1); render(); });
     document.querySelectorAll("[data-fabric-material]").forEach(el => el.oninput = (e) => f.fabric[+el.dataset.fabricMaterial].material = e.target.value);
-    document.querySelectorAll("[data-fabric-percent]").forEach(el => el.oninput = (e) => f.fabric[+el.dataset.fabricPercent].percent = e.target.value);
     document.querySelectorAll("[data-rmphoto]").forEach(el => el.onclick = () => { f.photos.splice(+el.dataset.rmphoto,1); render(); });
     document.getElementById("photo-add-btn").onclick = () => document.getElementById("photo-input").click();
     document.getElementById("photo-input").onchange = async (e) => {
