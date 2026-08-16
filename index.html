@@ -284,23 +284,45 @@ function render() {
 // tallest photo's height so items line up — but no image is ever stretched
 // beyond 102% of its own true resolution, so nothing goes soft to do it.
 function matchGridRowHeights() {
-  const imgs = Array.from(document.querySelectorAll(".grid .card .photo img"));
-  if (!imgs.length) return;
+  const cards = Array.from(document.querySelectorAll(".grid .card"));
+  if (!cards.length) return;
   const cols = 2;
   const MAX_UPSCALE = 1.02;
   const BASELINE = 0.75;
-  Promise.all(imgs.map(img => img.complete
-    ? Promise.resolve()
-    : new Promise(res => { img.onload = res; img.onerror = res; })
-  )).then(() => {
-    for (let i = 0; i < imgs.length; i += cols) {
-      const rowImgs = imgs.slice(i, i + cols).filter(img => img.naturalHeight > 0);
-      if (!rowImgs.length) continue;
-      const target = Math.max(...rowImgs.map(img => img.naturalHeight * BASELINE));
-      rowImgs.forEach(img => {
-        const capped = Math.min(target, img.naturalHeight * MAX_UPSCALE);
-        img.style.height = capped + "px";
-        img.style.width = "auto";
+
+  const photoEls = cards.map(c => c.querySelector(".photo"));
+  const cardImgs = photoEls.map(p => p ? p.querySelector("img") : null);
+  const loaders = cardImgs.map(img => (img && !img.complete)
+    ? new Promise(res => { img.onload = res; img.onerror = res; })
+    : Promise.resolve()
+  );
+
+  Promise.all(loaders).then(() => {
+    for (let i = 0; i < cards.length; i += cols) {
+      const rowIdx = [];
+      for (let j = i; j < Math.min(i + cols, cards.length); j++) {
+        const img = cardImgs[j];
+        if (img && img.naturalHeight > 0) rowIdx.push(j);
+      }
+      if (!rowIdx.length) continue;
+      const target = Math.max(...rowIdx.map(j => cardImgs[j].naturalHeight * BASELINE));
+      rowIdx.forEach(j => {
+        const img = cardImgs[j];
+        const photoEl = photoEls[j];
+        const aspect = img.naturalWidth / img.naturalHeight;
+        let h = Math.min(target, img.naturalHeight * MAX_UPSCALE);
+        let w = h * aspect;
+        // Respect the column's real available width — recompute height from
+        // width if needed, so width and height are always scaled together
+        // and the browser's own max-width clamp never fights our height.
+        const available = photoEl.clientWidth - 24; // minus left+right padding
+        if (available > 0 && w > available) {
+          w = available;
+          h = w / aspect;
+        }
+        img.style.width = w + "px";
+        img.style.height = h + "px";
+        img.style.maxWidth = "none";
       });
     }
   });
