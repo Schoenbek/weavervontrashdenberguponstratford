@@ -14,12 +14,14 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
+    color-scheme: light;
     --bg: #FFFFFF; --surface: #FFFFFF; --ink: #2B2B2B; --muted: #8A8A8A;
     --line: #E5E5E5; --accent: #3B5998; --danger: #B5603E;
     background: var(--bg); min-height: 100vh; color: var(--ink);
     font-family: 'Inter', -apple-system, sans-serif; font-size: 15px;
   }
   body.dark {
+    color-scheme: dark;
     --bg: #000000; --surface: #000000; --ink: #FFFFFF; --muted: #8A8A8A; --line: #262626;
   }
   #app { max-width: 480px; margin: 0 auto; position: relative; padding-bottom: 30px; min-height: 100vh; background: var(--bg); }
