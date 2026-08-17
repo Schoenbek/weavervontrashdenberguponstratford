@@ -176,28 +176,41 @@ let state = {
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 
+// Fixes older stored category naming so it matches the current dropdown list.
+function migrateItemCategory(it) {
+  if (it.category === "Sweater") it.category = "Sweaters";
+  return it;
+}
+
+// Combines an incoming taxonomy (from storage or an imported backup) with the
+// app's current defaults, so neither source ever wipes out the other's options.
+function mergeTaxonomy(incoming) {
+  const cleanedCategories = (incoming.categories || []).filter(c => c !== "Sweater");
+  const mergedCategories = Array.from(new Set([...cleanedCategories, ...(state.taxonomy.categories || []), ...DEFAULT_CATEGORIES]));
+  const mergedSubcategories = Array.from(new Set([...(incoming.subcategories || []), ...(state.taxonomy.subcategories || []), ...DEFAULT_SUBCATEGORIES]));
+  const mergedBrands = Array.from(new Set([...(incoming.brands || []), ...(state.taxonomy.brands || [])]));
+  return {
+    categories: mergedCategories.sort((a, b) => a.localeCompare(b)),
+    subcategories: mergedSubcategories.length ? mergedSubcategories : [...DEFAULT_SUBCATEGORIES],
+    brands: mergedBrands,
+  };
+}
+
 function loadAll() {
   const keys = store.listKeys("item:");
   state.items = keys.map(k => JSON.parse(store.get(k))).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
   // One-time migration: earlier versions stored category as "Sweater" (singular);
   // the category list now uses "Sweaters" (plural) to match the other options.
-  let migrated = false;
   state.items.forEach(it => {
-    if (it.category === "Sweater") { it.category = "Sweaters"; store.set("item:" + it.id, JSON.stringify(it)); migrated = true; }
+    const before = it.category;
+    migrateItemCategory(it);
+    if (it.category !== before) store.set("item:" + it.id, JSON.stringify(it));
   });
 
   const t = store.get("taxonomy");
   if (t) {
-    const parsed = JSON.parse(t);
-    const cleanedCategories = (parsed.categories || []).filter(c => c !== "Sweater"); // drop stale singular entry
-    const mergedCategories = Array.from(new Set([...cleanedCategories, ...DEFAULT_CATEGORIES]));
-    const mergedSubcategories = Array.from(new Set([...(parsed.subcategories || []), ...DEFAULT_SUBCATEGORIES]));
-    state.taxonomy = {
-      categories: mergedCategories.sort((a, b) => a.localeCompare(b)),
-      subcategories: mergedSubcategories.length ? mergedSubcategories : [...DEFAULT_SUBCATEGORIES],
-      brands: parsed.brands || [],
-    };
+    state.taxonomy = mergeTaxonomy(JSON.parse(t));
     saveTaxonomy();
   }
   const d = store.get("dark-mode");
@@ -587,8 +600,11 @@ function handleImport(e) {
       const parsed = JSON.parse(reader.result);
       const imported = Array.isArray(parsed.items) ? parsed.items : [];
       if (!imported.length) { showToast("No items found in file"); return; }
-      imported.forEach(it => store.set("item:" + it.id, JSON.stringify(it)));
-      if (parsed.taxonomy) { state.taxonomy = parsed.taxonomy; saveTaxonomy(); }
+      imported.forEach(it => {
+        migrateItemCategory(it);
+        store.set("item:" + it.id, JSON.stringify(it));
+      });
+      if (parsed.taxonomy) { state.taxonomy = mergeTaxonomy(parsed.taxonomy); saveTaxonomy(); }
       const byId = new Map(state.items.map(i => [i.id, i]));
       imported.forEach(it => byId.set(it.id, it));
       state.items = Array.from(byId.values()).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
