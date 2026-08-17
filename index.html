@@ -142,7 +142,7 @@ const COLORS = [
   { name: "Silver", hex: "#C4C4C4" },
   { name: "Metallic", hex: "linear-gradient(135deg,#C0C0C0,#EDEDED,#A8A8A8)" },
 ];
-const DEFAULT_CATEGORIES = ["Sweater"];
+const DEFAULT_CATEGORIES = ["Coats / Jackets", "Pants", "Shirts", "Sweaters"];
 const DEFAULT_SUBCATEGORIES = ["Cardigan", "Crewneck", "Polo", "Turtleneck", "V-neck", "Vest"];
 
 // ---- storage (real browser localStorage — persists reliably, unlike the chat sandbox) ----
@@ -177,14 +177,26 @@ function uid() { return Date.now().toString(36) + Math.random().toString(36).sli
 function loadAll() {
   const keys = store.listKeys("item:");
   state.items = keys.map(k => JSON.parse(store.get(k))).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+  // One-time migration: earlier versions stored category as "Sweater" (singular);
+  // the category list now uses "Sweaters" (plural) to match the other options.
+  let migrated = false;
+  state.items.forEach(it => {
+    if (it.category === "Sweater") { it.category = "Sweaters"; store.set("item:" + it.id, JSON.stringify(it)); migrated = true; }
+  });
+
   const t = store.get("taxonomy");
   if (t) {
     const parsed = JSON.parse(t);
+    const cleanedCategories = (parsed.categories || []).filter(c => c !== "Sweater"); // drop stale singular entry
+    const mergedCategories = Array.from(new Set([...cleanedCategories, ...DEFAULT_CATEGORIES]));
+    const mergedSubcategories = Array.from(new Set([...(parsed.subcategories || []), ...DEFAULT_SUBCATEGORIES]));
     state.taxonomy = {
-      categories: parsed.categories?.length ? parsed.categories : [...DEFAULT_CATEGORIES],
-      subcategories: parsed.subcategories?.length ? parsed.subcategories : [...DEFAULT_SUBCATEGORIES],
+      categories: mergedCategories.sort((a, b) => a.localeCompare(b)),
+      subcategories: mergedSubcategories.length ? mergedSubcategories : [...DEFAULT_SUBCATEGORIES],
       brands: parsed.brands || [],
     };
+    saveTaxonomy();
   }
   const d = store.get("dark-mode");
   state.dark = d === null ? true : d === "true"; // defaults to dark mode until the user explicitly picks light
@@ -434,7 +446,7 @@ function renderForm() {
     <div class="formwrap">
       <div class="field"><label>Photos</label><div class="photo-upload">${photosHtml}</div></div>
       <div class="field"><label>Category</label><select id="f-category">${catOptions}</select></div>
-      <div class="field"><label>Sweater Type</label><select id="f-subcategory">${subOptions}</select></div>
+      ${f.category === "Sweaters" ? `<div class="field"><label>Sweater Type</label><select id="f-subcategory">${subOptions}</select></div>` : ""}
       <div class="field" style="position:relative;"><label>Brand</label>
         <input type="text" id="f-brand" autocomplete="off" value="${esc(f.brand)}" placeholder="e.g. Missoni" />
         <div id="brand-suggestions" class="suggestions"></div>
@@ -492,8 +504,13 @@ function attachHandlers() {
     const f = state.activeItem;
     document.getElementById("theme-toggle-form").onclick = toggleDark;
     document.getElementById("cancel-btn").onclick = () => { state.view = state.editingId ? "detail" : "browse"; render(); };
-    document.getElementById("f-category").onchange = (e) => f.category = e.target.value;
-    document.getElementById("f-subcategory").onchange = (e) => f.subcategory = e.target.value;
+    document.getElementById("f-category").onchange = (e) => {
+      f.category = e.target.value;
+      if (f.category !== "Sweaters") f.subcategory = "";
+      render();
+    };
+    const subSelect = document.getElementById("f-subcategory");
+    if (subSelect) subSelect.onchange = (e) => f.subcategory = e.target.value;
     (function setupBrandAutocomplete() {
       const input = document.getElementById("f-brand");
       const box = document.getElementById("brand-suggestions");
