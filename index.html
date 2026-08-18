@@ -102,6 +102,7 @@
 </head>
 <body>
 <div id="app"></div>
+<script src="https://alcdn.msauth.net/browser/3.7.1/js/msal-browser.min.js"></script>
 <script>
 const COLORS = [
   { name: "Black", hex: "#1A1A1A" },
@@ -172,7 +173,79 @@ let state = {
   filterCategory: "",
   filterColor: "",
   dark: false,
+  oneDriveAccount: null, // set once signed in; holds the account's display email
 };
+
+// --- OneDrive connection (Stage 1: sign-in only) ---
+const MSAL_CONFIG = {
+  auth: {
+    clientId: "136800b4-2fbe-4678-ad35-ea0fd04570bd",
+    authority: "https://login.microsoftonline.com/consumers", // this app is registered for personal Microsoft accounts only
+    redirectUri: window.location.origin + window.location.pathname,
+  },
+  cache: {
+    cacheLocation: "localStorage",
+    storeAuthStateInCookie: false,
+  },
+};
+let msalInstance = null;
+
+async function initOneDrive() {
+  try {
+    msalInstance = new msal.PublicClientApplication(MSAL_CONFIG);
+    await msalInstance.initialize();
+    const result = await msalInstance.handleRedirectPromise();
+    if (result && result.account) {
+      msalInstance.setActiveAccount(result.account);
+    }
+    const accounts = msalInstance.getAllAccounts();
+    if (accounts.length > 0) {
+      msalInstance.setActiveAccount(accounts[0]);
+      state.oneDriveAccount = accounts[0].username;
+      render();
+      testOneDriveConnection();
+    }
+  } catch (err) {
+    console.error("OneDrive init error:", err);
+  }
+}
+
+async function connectOneDrive() {
+  if (!msalInstance) { showToast("OneDrive isn't ready yet — try again in a moment"); return; }
+  try {
+    await msalInstance.loginRedirect({ scopes: ["Files.ReadWrite.AppFolder"] });
+  } catch (err) {
+    showToast("OneDrive sign-in failed: " + (err && err.message ? err.message : "unknown error"));
+  }
+}
+
+async function getOneDriveToken() {
+  const account = msalInstance.getActiveAccount();
+  if (!account) throw new Error("not signed in");
+  try {
+    const result = await msalInstance.acquireTokenSilent({ scopes: ["Files.ReadWrite.AppFolder"], account });
+    return result.accessToken;
+  } catch (err) {
+    await msalInstance.acquireTokenRedirect({ scopes: ["Files.ReadWrite.AppFolder"] });
+    throw err; // page will redirect; this line won't really be reached
+  }
+}
+
+async function testOneDriveConnection() {
+  try {
+    const token = await getOneDriveToken();
+    const res = await fetch("https://graph.microsoft.com/v1.0/me/drive/special/approot", {
+      headers: { Authorization: "Bearer " + token },
+    });
+    if (res.ok) {
+      showToast("OneDrive connected");
+    } else {
+      showToast("OneDrive connected, but a test call failed (status " + res.status + ")");
+    }
+  } catch (err) {
+    showToast("OneDrive connection test failed: " + (err && err.message ? err.message : "unknown error"));
+  }
+}
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 
@@ -403,6 +476,7 @@ function renderBrowse() {
       <button id="export-btn">&#8681; EXPORT BACKUP</button>
       <button id="import-btn">&#8679; IMPORT</button>
       <input type="file" id="import-file" accept="application/json" hidden />
+      <button id="onedrive-btn">${state.oneDriveAccount ? "&#9989; ONEDRIVE CONNECTED" : "&#9729; CONNECT ONEDRIVE"}</button>
     </div>
   `;
 }
@@ -498,6 +572,13 @@ function attachHandlers() {
     document.getElementById("export-btn").onclick = exportData;
     document.getElementById("import-btn").onclick = () => document.getElementById("import-file").click();
     document.getElementById("import-file").onchange = handleImport;
+    document.getElementById("onedrive-btn").onclick = () => {
+      if (state.oneDriveAccount) {
+        showToast("Connected as " + state.oneDriveAccount);
+      } else {
+        connectOneDrive();
+      }
+    };
   } else if (state.view === "detail") {
     document.getElementById("theme-toggle-detail").onclick = toggleDark;
     document.getElementById("back-btn").onclick = () => { state.view = "browse"; render(); };
@@ -617,6 +698,7 @@ function handleImport(e) {
 
 loadAll();
 render();
+initOneDrive();
 </script>
 </body>
 </html>
