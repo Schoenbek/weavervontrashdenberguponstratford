@@ -25,7 +25,7 @@
     --bg: #000000; --surface: #000000; --ink: #FFFFFF; --muted: #8A8A8A; --line: #262626;
   }
   #app { max-width: 480px; margin: 0 auto; position: relative; padding-bottom: 30px; min-height: 100vh; background: var(--bg); }
-  .header { padding: 26px 20px 18px; display: flex; align-items: baseline; justify-content: space-between; }
+  .header { padding: 26px 20px 18px; padding-top: max(46px, calc(env(safe-area-inset-top) + 20px)); display: flex; align-items: baseline; justify-content: space-between; }
   .header h1 { font-weight: 600; font-size: 22px; margin: 0; }
   .header-right { display: flex; align-items: center; gap: 12px; }
   .count { font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
