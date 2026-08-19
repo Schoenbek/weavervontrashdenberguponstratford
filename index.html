@@ -102,7 +102,7 @@
 </head>
 <body>
 <div id="app"></div>
-<script src="https://alcdn.msauth.net/browser/3.7.1/js/msal-browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@5.19.0/lib/msal-browser.min.js"></script>
 <script>
 const COLORS = [
   { name: "Black", hex: "#1A1A1A" },
@@ -207,6 +207,7 @@ async function initOneDrive() {
     }
   } catch (err) {
     console.error("OneDrive init error:", err);
+    showToast("OneDrive couldn't load: " + (err && err.message ? err.message : "unknown error"));
   }
 }
 
