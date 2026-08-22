@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="robots" content="noindex, nofollow" />
+<title>closet case</title>
+<link rel="apple-touch-icon" href="icon.png?v=4" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="closet case" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    color-scheme: light;
+    --bg: #FFFFFF; --surface: #FFFFFF; --ink: #2B2B2B; --muted: #8A8A8A;
+    --line: #E5E5E5; --accent: #3B5998; --danger: #B5603E;
+    background: var(--bg); min-height: 100vh; color: var(--ink);
+    font-family: 'Inter', -apple-system, sans-serif; font-size: 15px;
+  }
+  body.dark {
+    color-scheme: dark;
+    --bg: #000000; --surface: #000000; --ink: #FFFFFF; --muted: #8A8A8A; --line: #262626;
+  }
+  #app { max-width: 480px; margin: 0 auto; position: relative; padding-bottom: 30px; min-height: 100vh; background: var(--bg); }
+  .header { padding: 26px 20px 18px; padding-top: max(46px, calc(env(safe-area-inset-top) + 20px)); display: flex; align-items: baseline; justify-content: space-between; }
+  .header h1 { font-weight: 600; font-size: 22px; margin: 0; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .count { font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .theme-toggle { background: none; border: 1px solid var(--line); border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; color: var(--ink); cursor: pointer; }
+  .add-header-btn { background: var(--accent); border: none; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; font-size: 20px; line-height: 1; }
+  .warning-banner { margin: 0 20px 14px; padding: 10px 14px; border: 1px solid var(--danger); border-radius: 10px; font-size: 12px; color: var(--danger); line-height: 1.4; }
+  .searchbar { margin: 0 20px 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); padding: 8px 2px; }
+  .searchbar input { border: none; outline: none; background: transparent; flex: 1; font-size: 14px; color: var(--ink); font-family: inherit; }
+  .searchbar input::placeholder { color: var(--muted); }
+  .filters { display: flex; gap: 8px; padding: 0 20px 18px; overflow-x: auto; }
+  .filters select { font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; background: transparent; border: 1px solid var(--line); border-radius: 20px; padding: 7px 12px; color: var(--ink); flex-shrink: 0; font-family: inherit; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .card { background: var(--bg); cursor: pointer; display: flex; flex-direction: column; }
+  .card .photo { width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--bg); padding: 12px 12px 0; }
+  .card .photo img { display: block; max-width: 100%; }
+  .card .photo .empty { color: var(--muted); opacity: 0.4; padding: 40px 0; }
+  .card .info { padding: 12px 14px 16px; }
+  .card .cat { font-size: 9.5px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .card .brand { font-weight: 600; font-size: 14px; line-height: 1.25; margin-bottom: 8px; }
+  .card .swatches { display: flex; gap: 4px; }
+  .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); flex-shrink: 0; }
+  .color-bars { display: flex; flex-direction: column; gap: 2px; background: var(--bg); margin-top: 2px; }
+  .color-bar { padding: 12px 16px; font-size: 13px; font-weight: 600; letter-spacing: 0.02em; }
+  .suggestions { position: absolute; top: 100%; left: 0; right: 0; background: var(--bg); border: 1px solid var(--line); border-top: none; z-index: 20; max-height: 160px; overflow-y: auto; display: none; }
+  .suggestions.show { display: block; }
+  .suggestions div { padding: 10px 12px; font-size: 14px; cursor: pointer; }
+  .suggestions div:hover, .suggestions div.active { background: var(--line); }
+  .empty-state { text-align: center; padding: 70px 30px; color: var(--muted); }
+  .empty-state .title { font-size: 17px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+  .formwrap { padding: 0 20px; }
+  .field { margin-bottom: 20px; }
+  .field label { display: block; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .field input[type="text"], .field input[type="number"], .field select {
+    width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--line); border-radius: 0;
+    padding: 9px 2px; font-size: 15px; color: var(--ink); font-family: inherit;
+  }
+  .field input:focus, .field select:focus { outline: none; border-bottom: 1.5px solid var(--accent); }
+  .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .color-opt { display: flex; align-items: center; gap: 7px; border: 1px solid var(--line); background: transparent; border-radius: 20px; padding: 8px 10px; font-size: 12px; cursor: pointer; }
+  .color-opt.selected { border-color: var(--accent); font-weight: 600; }
+  .fabric-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+  .fabric-row input[type="text"] { flex: 2; }
+  .fabric-row input[type="number"] { flex: 1; }
+  .fabric-row button { background: none; border: none; color: var(--danger); padding: 6px; cursor: pointer; font-size: 15px; }
+  .addlink { background: none; border: none; color: var(--accent); font-weight: 600; font-size: 13px; padding: 6px 0; cursor: pointer; }
+  .photo-upload { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; }
+  .photo-thumb { position: relative; width: 84px; height: 84px; overflow: hidden; flex-shrink: 0; border: 1px solid var(--line); }
+  .photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .photo-thumb .rm { position: absolute; top: 3px; right: 3px; background: rgba(0,0,0,0.6); border: none; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; font-size: 11px; }
+  .photo-add { width: 84px; height: 84px; border: 1px dashed var(--line); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--muted); cursor: pointer; font-size: 22px; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 20px; }
+  .icon-btn { background: none; border: 1px solid var(--line); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: var(--ink); cursor: pointer; font-size: 16px; }
+  .save-btn { background: var(--accent); color: #fff; border: none; border-radius: 20px; padding: 9px 20px; font-weight: 600; font-size: 13.5px; cursor: pointer; font-family: inherit; }
+  .detail-photo { width: 100%; background: var(--bg); overflow: hidden; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: center; padding: 10px; cursor: zoom-in; }
+  .detail-photo img { max-width: 100%; max-height: 70vh; display: block; }
+  .zoom-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 100; display: flex; align-items: center; justify-content: center; cursor: zoom-out; }
+  .zoom-overlay img { max-width: 96vw; max-height: 96vh; object-fit: contain; }
+  .zoom-close { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.15); border: none; color: #fff; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; }
+  .detail-thumbs { display: flex; gap: 8px; padding: 12px 20px; overflow-x: auto; }
+  .detail-thumbs img { width: 54px; height: 54px; object-fit: cover; border: 1px solid var(--line); }
+  .detail-body { padding: 8px 20px 20px; }
+  .detail-cat { font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .detail-brand { font-size: 21px; font-weight: 700; margin-bottom: 18px; }
+  .detail-row { display: flex; justify-content: space-between; padding: 13px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+  .detail-row .k { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .detail-row .v { text-align: right; max-width: 62%; display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; align-items: center; }
+  .detail-actions { display: flex; gap: 10px; margin-top: 22px; }
+  .detail-actions button { flex: 1; border-radius: 24px; padding: 12px; font-weight: 600; font-size: 13px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; font-family: inherit; }
+  .detail-actions button.danger { color: var(--danger); border-color: var(--danger); }
+  .toast { position: fixed; bottom: 96px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 9px 18px; border-radius: 20px; font-size: 12px; z-index: 50; max-width: 90%; text-align: center; }
+  .footer-menu { display: flex; justify-content: center; gap: 24px; padding: 10px 20px 4px; }
+  .footer-menu button { background: none; border: none; color: var(--muted); font-size: 10.5px; letter-spacing: 0.06em; cursor: pointer; font-family: inherit; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@5.19.0/lib/msal-browser.min.js"></script>
+<script>
+const COLORS = [
+  { name: "Black", hex: "#1A1A1A" },
+  { name: "White", hex: "#FFFFFF", border: true },
+  { name: "Ivory", hex: "#F5F0E1" },
+  { name: "Cream", hex: "#F0E6D2" },
+  { name: "Beige", hex: "#E3D5B8" },
+  { name: "Taupe", hex: "#9C8974" },
+  { name: "Camel", hex: "#C19A6B" },
+  { name: "Cognac", hex: "#8B4A2B" },
+  { name: "Tan", hex: "#D2B48C" },
+  { name: "Brown", hex: "#6B4423" },
+  { name: "Chocolate", hex: "#3F2818" },
+  { name: "Light Grey", hex: "#C7C2B8" },
+  { name: "Medium Grey", hex: "#8F897C" },
+  { name: "Charcoal", hex: "#3A3A3A" },
+  { name: "Navy", hex: "#1F2A44" },
+  { name: "Blue", hex: "#3B5998" },
+  { name: "Light Blue", hex: "#A9C6E8" },
+  { name: "Turquoise", hex: "#3FA9A4" },
+  { name: "Teal", hex: "#2E6E62" },
+  { name: "Sage", hex: "#A3AD8C" },
+  { name: "Light Green", hex: "#A9C98F" },
+  { name: "Green", hex: "#4B6043" },
+  { name: "Olive", hex: "#6B6B3A" },
+  { name: "Emerald", hex: "#1F6F54" },
+  { name: "Gold", hex: "#D4AF37" },
+  { name: "Mustard", hex: "#C9A227" },
+  { name: "Yellow", hex: "#E8C547" },
+  { name: "Orange", hex: "#C9622B" },
+  { name: "Coral", hex: "#E2725B" },
+  { name: "Rust", hex: "#A8481A" },
+  { name: "Pink", hex: "#D98A96" },
+  { name: "Red", hex: "#A83232" },
+  { name: "Burgundy", hex: "#6B1E2E" },
+  { name: "Mauve", hex: "#B08497" },
+  { name: "Lavender", hex: "#C6B4D6" },
+  { name: "Purple", hex: "#6B4B7A" },
+  { name: "Plum", hex: "#6E3B5C" },
+  { name: "Silver", hex: "#C4C4C4" },
+  { name: "Metallic", hex: "linear-gradient(135deg,#C0C0C0,#EDEDED,#A8A8A8)" },
+];
+const DEFAULT_CATEGORIES = ["Coats / Jackets", "Pants", "Shirts", "Sweaters"];
+const DEFAULT_SUBCATEGORIES = ["Cardigan", "Crewneck", "Polo", "Turtleneck", "V-neck", "Vest"];
+
+// ---- storage (real browser localStorage — persists reliably, unlike the chat sandbox) ----
+const store = {
+  get(key) { const v = localStorage.getItem(key); return v; },
+  set(key, value) { localStorage.setItem(key, value); },
+  remove(key) { localStorage.removeItem(key); },
+  listKeys(prefix) {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!prefix || k.startsWith(prefix)) keys.push(k);
+    }
+    return keys;
+  }
+};
+
+let state = {
+  items: [],
+  taxonomy: { categories: [...DEFAULT_CATEGORIES], subcategories: [...DEFAULT_SUBCATEGORIES], brands: [] },
+  view: "browse",
+  activeItem: null,
+  editingId: null,
+  query: "",
+  filterCategory: "",
+  filterColor: "",
+  dark: false,
+  oneDriveAccount: null, // set once signed in; holds the account's display email
+};
+
+// --- OneDrive connection (Stage 1: sign-in only) ---
+const MSAL_CONFIG = {
+  auth: {
+    clientId: "136800b4-2fbe-4678-ad35-ea0fd04570bd",
+    authority: "https://login.microsoftonline.com/consumers", // this app is registered for personal Microsoft accounts only
+    redirectUri: window.location.origin + window.location.pathname,
+  },
+  cache: {
+    cacheLocation: "localStorage",
+    storeAuthStateInCookie: false,
+  },
+};
+let msalInstance = null;
+
+async function initOneDrive() {
+  try {
+    msalInstance = new msal.PublicClientApplication(MSAL_CONFIG);
+    await msalInstance.initialize();
+    const result = await msalInstance.handleRedirectPromise();
+    if (result && result.account) {
+      msalInstance.setActiveAccount(result.account);
+    }
+    const accounts = msalInstance.getAllAccounts();
+    if (accounts.length > 0) {
+      msalInstance.setActiveAccount(accounts[0]);
+      state.oneDriveAccount = accounts[0].username;
+      render();
+      testOneDriveConnection();
+    }
+  } catch (err) {
+    console.error("OneDrive init error:", err);
+    showToast("OneDrive couldn't load: " + (err && err.message ? err.message : "unknown error"));
+  }
+}
+
+async function connectOneDrive() {
+  if (!msalInstance) { showToast("OneDrive isn't ready yet — try again in a moment"); return; }
+  try {
+    await msalInstance.loginRedirect({ scopes: ["Files.ReadWrite.AppFolder"] });
+  } catch (err) {
+    showToast("OneDrive sign-in failed: " + (err && err.message ? err.message : "unknown error"));
+  }
+}
+
+async function getOneDriveToken() {
+  const account = msalInstance.getActiveAccount();
+  if (!account) throw new Error("not signed in");
+  try {
+    const result = await msalInstance.acquireTokenSilent({ scopes: ["Files.ReadWrite.AppFolder"], account });
+    return result.accessToken;
+  } catch (err) {
+    await msalInstance.acquireTokenRedirect({ scopes: ["Files.ReadWrite.AppFolder"] });
+    throw err; // page will redirect; this line won't really be reached
+  }
+}
+
+async function testOneDriveConnection() {
+  try {
+    const token = await getOneDriveToken();
+    const res = await fetch("https://graph.microsoft.com/v1.0/me/drive/special/approot", {
+      headers: { Authorization: "Bearer " + token },
+    });
+    if (res.ok) {
+      showToast("OneDrive connected");
+    } else {
+      let detail = "";
+      try {
+        const body = await res.json();
+        detail = (body && body.error && body.error.message) ? body.error.message : JSON.stringify(body);
+      } catch { detail = "(no error details returned)"; }
+      console.error("OneDrive test call failed:", res.status, detail);
+      showToast("OneDrive test failed (" + res.status + "): " + detail);
+    }
+  } catch (err) {
+    showToast("OneDrive connection test failed: " + (err && err.message ? err.message : "unknown error"));
+  }
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
+// Fixes older stored category naming so it matches the current dropdown list.
+function migrateItemCategory(it) {
+  if (it.category === "Sweater") it.category = "Sweaters";
+  return it;
+}
+
+// Combines an incoming taxonomy (from storage or an imported backup) with the
+// app's current defaults, so neither source ever wipes out the other's options.
+function mergeTaxonomy(incoming) {
+  const cleanedCategories = (incoming.categories || []).filter(c => c !== "Sweater");
+  const mergedCategories = Array.from(new Set([...cleanedCategories, ...(state.taxonomy.categories || []), ...DEFAULT_CATEGORIES]));
+  const mergedSubcategories = Array.from(new Set([...(incoming.subcategories || []), ...(state.taxonomy.subcategories || []), ...DEFAULT_SUBCATEGORIES]));
+  const mergedBrands = Array.from(new Set([...(incoming.brands || []), ...(state.taxonomy.brands || [])]));
+  return {
+    categories: mergedCategories.sort((a, b) => a.localeCompare(b)),
+    subcategories: mergedSubcategories.length ? mergedSubcategories : [...DEFAULT_SUBCATEGORIES],
+    brands: mergedBrands,
+  };
+}
+
+function loadAll() {
+  const keys = store.listKeys("item:");
+  state.items = keys.map(k => JSON.parse(store.get(k))).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+  // One-time migration: earlier versions stored category as "Sweater" (singular);
+  // the category list now uses "Sweaters" (plural) to match the other options.
+  state.items.forEach(it => {
+    const before = it.category;
+    migrateItemCategory(it);
+    if (it.category !== before) store.set("item:" + it.id, JSON.stringify(it));
+  });
+
+  const t = store.get("taxonomy");
+  if (t) {
+    state.taxonomy = mergeTaxonomy(JSON.parse(t));
+    saveTaxonomy();
+  }
+  const d = store.get("dark-mode");
+  state.dark = d === null ? true : d === "true"; // defaults to dark mode until the user explicitly picks light
+  document.body.classList.toggle("dark", state.dark);
+}
+
+function saveTaxonomy() { store.set("taxonomy", JSON.stringify(state.taxonomy)); }
+
+function saveItem(item) {
+  store.set("item:" + item.id, JSON.stringify(item));
+  const idx = state.items.findIndex(i => i.id === item.id);
+  if (idx >= 0) state.items[idx] = item; else state.items.unshift(item);
+
+  let changed = false;
+  if (item.category && !state.taxonomy.categories.includes(item.category)) { state.taxonomy.categories.push(item.category); changed = true; }
+  if (item.subcategory && !state.taxonomy.subcategories.includes(item.subcategory)) { state.taxonomy.subcategories.push(item.subcategory); changed = true; }
+  if (item.brand && !state.taxonomy.brands.includes(item.brand)) { state.taxonomy.brands.push(item.brand); changed = true; }
+  if (changed) saveTaxonomy();
+  showToast("Saved");
+}
+
+function deleteItem(id) {
+  store.remove("item:" + id);
+  state.items = state.items.filter(i => i.id !== id);
+  showToast("Deleted");
+}
+
+let toastTimer = null;
+function showToast(msg) {
+  let t = document.querySelector(".toast");
+  if (!t) { t = document.createElement("div"); t.className = "toast"; document.getElementById("app").appendChild(t); }
+  t.textContent = msg;
+  t.style.display = "block";
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.style.display = "none"; }, 2200);
+}
+
+function compressImage(file, maxDim, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > height && width > maxDim) { height = Math.round(height * maxDim / width); width = maxDim; }
+        else if (height > maxDim) { width = Math.round(width * maxDim / height); height = maxDim; }
+        const canvas = document.createElement("canvas");
+        canvas.width = width; canvas.height = height;
+        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function esc(s) { return (s || "").toString().replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function swatchHtml(name, size) {
+  const c = COLORS.find(x => x.name === name);
+  if (!c) return "";
+  const border = c.border ? "1px solid var(--line)" : "1px solid rgba(0,0,0,0.1)";
+  return `<span class="swatch" style="width:${size}px;height:${size}px;background:${c.hex};border:${border}"></span>`;
+}
+
+function contrastText(hex) {
+  if (!hex || hex.indexOf("linear-gradient") === 0) return "#1A1A1A";
+  const h = hex.replace("#", "");
+  const r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
+  const lum = (0.299*r + 0.587*g + 0.114*b) / 255;
+  return lum > 0.55 ? "#1A1A1A" : "#FFFFFF";
+}
+
+function colorBarsHtml(colorNames) {
+  if (!colorNames || !colorNames.length) return `<div class="detail-row"><span class="k">Colors</span><span class="v">—</span></div>`;
+  const bars = colorNames.map(name => {
+    const c = COLORS.find(x => x.name === name);
+    const bg = c ? c.hex : "#999999";
+    const txt = contrastText(bg);
+    return `<div class="color-bar" style="background:${bg};color:${txt};">${esc(name)}</div>`;
+  }).join("");
+  return `<div class="detail-row" style="display:block;"><span class="k">Colors</span></div><div class="color-bars">${bars}</div>`;
+}
+
+function render() {
+  const app = document.getElementById("app");
+  if (state.view === "browse") app.innerHTML = renderBrowse();
+  else if (state.view === "detail") app.innerHTML = renderDetail();
+  else if (state.view === "form") app.innerHTML = renderForm();
+  attachHandlers();
+  if (state.view === "browse") matchGridRowHeights();
+}
+
+// Shows the full, uncropped photo for each item. Rows are matched to their
+// tallest photo's height so items line up — but no image is ever stretched
+// beyond 102% of its own true resolution, so nothing goes soft to do it.
+function matchGridRowHeights() {
+  const cards = Array.from(document.querySelectorAll(".grid .card"));
+  if (!cards.length) return;
+  const cols = 2;
+  const MAX_UPSCALE = 1.02;
+  const BASELINE = 0.75;
+
+  const photoEls = cards.map(c => c.querySelector(".photo"));
+  const cardImgs = photoEls.map(p => p ? p.querySelector("img") : null);
+  const loaders = cardImgs.map(img => (img && !img.complete)
+    ? new Promise(res => { img.onload = res; img.onerror = res; })
+    : Promise.resolve()
+  );
+
+  Promise.all(loaders).then(() => {
+    for (let i = 0; i < cards.length; i += cols) {
+      const rowIdx = [];
+      for (let j = i; j < Math.min(i + cols, cards.length); j++) {
+        const img = cardImgs[j];
+        if (img && img.naturalHeight > 0) rowIdx.push(j);
+      }
+      if (!rowIdx.length) continue;
+      const target = Math.max(...rowIdx.map(j => cardImgs[j].naturalHeight * BASELINE));
+      rowIdx.forEach(j => {
+        const img = cardImgs[j];
+        const photoEl = photoEls[j];
+        const aspect = img.naturalWidth / img.naturalHeight;
+        let h = Math.min(target, img.naturalHeight * MAX_UPSCALE);
+        let w = h * aspect;
+        // Respect the column's real available width — recompute height from
+        // width if needed, so width and height are always scaled together
+        // and the browser's own max-width clamp never fights our height.
+        const available = photoEl.clientWidth - 24; // minus left+right padding
+        if (available > 0 && w > available) {
+          w = available;
+          h = w / aspect;
+        }
+        img.style.width = w + "px";
+        img.style.height = h + "px";
+        img.style.maxWidth = "none";
+      });
+    }
+  });
+}
+
+function filteredItems() {
+  const q = state.query.trim().toLowerCase();
+  return state.items.filter(it => {
+    if (state.filterCategory && it.category !== state.filterCategory) return false;
+    if (state.filterColor && !(it.colors || []).includes(state.filterColor)) return false;
+    if (!q) return true;
+    const hay = [it.brand, it.category, it.subcategory, it.size, ...(it.colors||[]), ...(it.fabric||[]).map(f=>f.material)].filter(Boolean).join(" ").toLowerCase();
+    return hay.includes(q);
+  });
+}
+
+function renderBrowse() {
+  const items = filteredItems();
+  const catOptions = state.taxonomy.categories.map(c => `<option value="${esc(c)}" ${state.filterCategory===c?'selected':''}>${esc(c)}</option>`).join("");
+  const colorOptions = COLORS.map(c => `<option value="${esc(c.name)}" ${state.filterColor===c.name?'selected':''}>${esc(c.name)}</option>`).join("");
+  const cardsHtml = items.length ? `<div class="grid">${items.map(it => `
+      <div class="card" data-open="${it.id}">
+        <div class="photo">${it.photos && it.photos[0] ? `<img src="${it.photos[0]}" />` : `<span style="color:var(--muted);opacity:.4;font-size:24px;">&#128247;</span>`}</div>
+        <div class="info">
+          <div class="cat">${esc(it.subcategory || it.category || "Uncategorized")}</div>
+          <div class="brand">${esc(it.brand || "Untitled")}</div>
+          <div class="swatches">${(it.colors||[]).slice(0,5).map(c=>swatchHtml(c,12)).join("")}</div>
+        </div>
+      </div>`).join("")}</div>`
+    : `<div class="empty-state"><div class="title">${state.items.length===0?"Nothing catalogued yet":"No matches"}</div><div>${state.items.length===0?"Add your first item to get started.":"Try a different search or filter."}</div></div>`;
+
+  return `
+    <div class="header">
+      <h1>closet case</h1>
+      <div class="header-right">
+        <span class="count">${state.items.length} ITEM${state.items.length===1?'':'S'}</span>
+        <button class="theme-toggle" id="theme-toggle">${state.dark ? "&#9728;" : "&#9789;"}</button>
+        <button class="add-header-btn" id="add-btn">+</button>
+      </div>
+    </div>
+    <div class="searchbar">
+      <span style="color:var(--muted)">&#128269;</span>
+      <input id="search-input" placeholder="Search brand, color, fabric, size…" value="${esc(state.query)}" />
+    </div>
+    <div class="filters">
+      <select id="filter-category"><option value="">All categories</option>${catOptions}</select>
+      <select id="filter-color"><option value="">All colors</option>${colorOptions}</select>
+    </div>
+    ${cardsHtml}
+    <div class="footer-menu">
+      <button id="export-btn">&#8681; EXPORT BACKUP</button>
+      <button id="import-btn">&#8679; IMPORT</button>
+      <input type="file" id="import-file" accept="application/json" hidden />
+      <button id="onedrive-btn">${state.oneDriveAccount ? "&#9989; ONEDRIVE CONNECTED" : "&#9729; CONNECT ONEDRIVE"}</button>
+    </div>
+  `;
+}
+
+function renderDetail() {
+  const it = state.activeItem;
+  return `
+    <div class="topbar">
+      <button class="icon-btn" id="back-btn">&#8592;</button>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="theme-toggle" id="theme-toggle-detail">${state.dark ? "&#9728;" : "&#9789;"}</button>
+        <button class="save-btn" id="edit-btn">Edit</button>
+      </div>
+    </div>
+    <div class="detail-photo" ${it.photos && it.photos[0] ? `id="detail-photo-zoom"` : ""}>${it.photos && it.photos[0] ? `<img src="${it.photos[0]}"/>` : `<span style="color:var(--muted);font-size:36px;">&#128247;</span>`}</div>
+    ${it.photos && it.photos.length>1 ? `<div class="detail-thumbs">${it.photos.map(p=>`<img src="${p}"/>`).join("")}</div>` : ""}
+    <div class="detail-body">
+      <div class="detail-cat">${esc(it.category)}${it.subcategory?` · ${esc(it.subcategory)}`:''}</div>
+      <div class="detail-brand">${esc(it.brand || "Untitled item")}</div>
+      <div class="detail-row"><span class="k">Size</span><span class="v">${esc(it.size)||'—'}</span></div>
+      ${colorBarsHtml(it.colors)}
+      <div class="detail-row"><span class="k">Fabric</span><span class="v">${(it.fabric||[]).length ? esc(it.fabric.map(f=>f.material).join(", ")) : '—'}</span></div>
+      <div class="detail-actions">
+        <button id="edit-btn2">&#9998; Edit</button>
+        <button class="danger" id="delete-btn">&#128465; Delete</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderForm() {
+  const f = state.activeItem;
+  const catOptions = `<option value="">Select category</option>` + state.taxonomy.categories.map(c=>`<option value="${esc(c)}" ${f.category===c?'selected':''}>${esc(c)}</option>`).join("");
+  const subOptions = `<option value="">Select type</option>` + state.taxonomy.subcategories.map(c=>`<option value="${esc(c)}" ${f.subcategory===c?'selected':''}>${esc(c)}</option>`).join("");
+  const photosHtml = (f.photos||[]).map((p,i)=>`
+      <div class="photo-thumb"><img src="${p}"/><button class="rm" data-rmphoto="${i}">&times;</button></div>
+    `).join("") + `<div class="photo-add" id="photo-add-btn">+</div><input type="file" id="photo-input" accept="image/*" multiple hidden />`;
+  const fabricHtml = (f.fabric||[]).map((row,i)=>`
+      <div class="fabric-row">
+        <input type="text" placeholder="Material (e.g. Wool)" data-fabric-material="${i}" value="${esc(row.material)}" />
+        <button data-rmfabric="${i}">&#128465;</button>
+      </div>`).join("");
+  const colorGrid = COLORS.map(c => `
+      <div class="color-opt ${f.colors.includes(c.name)?'selected':''}" data-color="${esc(c.name)}">
+        ${swatchHtml(c.name,14)} ${esc(c.name)}
+      </div>`).join("");
+
+  return `
+    <div class="topbar">
+      <button class="icon-btn" id="cancel-btn">&times;</button>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="theme-toggle" id="theme-toggle-form">${state.dark ? "&#9728;" : "&#9789;"}</button>
+        <button class="save-btn" id="save-btn">Save</button>
+      </div>
+    </div>
+    <div class="formwrap">
+      <div class="field"><label>Photos</label><div class="photo-upload">${photosHtml}</div></div>
+      <div class="field"><label>Category</label><select id="f-category">${catOptions}</select></div>
+      ${f.category === "Sweaters" ? `<div class="field"><label>Sweater Type</label><select id="f-subcategory">${subOptions}</select></div>` : ""}
+      <div class="field" style="position:relative;"><label>Brand</label>
+        <input type="text" id="f-brand" autocomplete="off" value="${esc(f.brand)}" placeholder="e.g. Missoni" />
+        <div id="brand-suggestions" class="suggestions"></div>
+      </div>
+      <div class="field"><label>Size</label><input type="text" id="f-size" value="${esc(f.size)}" placeholder="e.g. Large, EU 50, 42R" /></div>
+      <div class="field"><label>Colors ${f.colors.length?`(${f.colors.length} selected)`:''}</label><div class="color-grid">${colorGrid}</div></div>
+      <div class="field"><label>Fabric content</label><div id="fabric-rows">${fabricHtml}</div><button class="addlink" id="add-fabric">+ Add material</button></div>
+    </div>
+  `;
+}
+
+function toggleDark() {
+  state.dark = !state.dark;
+  store.set("dark-mode", String(state.dark));
+  document.body.classList.toggle("dark", state.dark);
+  render();
+}
+
+function attachHandlers() {
+  if (state.view === "browse") {
+    document.getElementById("theme-toggle").onclick = toggleDark;
+    document.getElementById("search-input").oninput = (e) => { state.query = e.target.value; render(); document.getElementById("search-input").focus(); document.getElementById("search-input").setSelectionRange(state.query.length, state.query.length); };
+    document.getElementById("filter-category").onchange = (e) => { state.filterCategory = e.target.value; render(); };
+    document.getElementById("filter-color").onchange = (e) => { state.filterColor = e.target.value; render(); };
+    document.querySelectorAll("[data-open]").forEach(el => el.onclick = () => {
+      state.activeItem = state.items.find(i => i.id === el.dataset.open);
+      state.view = "detail"; render();
+    });
+    document.getElementById("add-btn").onclick = () => {
+      state.editingId = null;
+      state.activeItem = { id: uid(), category: "", subcategory: "", brand: "", size: "", colors: [], fabric: [], photos: [], createdAt: Date.now() };
+      state.view = "form"; render();
+    };
+    document.getElementById("export-btn").onclick = exportData;
+    document.getElementById("import-btn").onclick = () => document.getElementById("import-file").click();
+    document.getElementById("import-file").onchange = handleImport;
+    document.getElementById("onedrive-btn").onclick = () => {
+      if (state.oneDriveAccount) {
+        testOneDriveConnection();
+      } else {
+        connectOneDrive();
+      }
+    };
+  } else if (state.view === "detail") {
+    document.getElementById("theme-toggle-detail").onclick = toggleDark;
+    document.getElementById("back-btn").onclick = () => { state.view = "browse"; render(); };
+    const zoomEl = document.getElementById("detail-photo-zoom");
+    if (zoomEl) {
+      zoomEl.onclick = () => {
+        const overlay = document.createElement("div");
+        overlay.className = "zoom-overlay";
+        overlay.innerHTML = `<img src="${state.activeItem.photos[0]}"/><button class="zoom-close">&times;</button>`;
+        overlay.onclick = () => overlay.remove();
+        document.body.appendChild(overlay);
+      };
+    }
+    const goEdit = () => { state.editingId = state.activeItem.id; state.activeItem = JSON.parse(JSON.stringify(state.activeItem)); state.view = "form"; render(); };
+    document.getElementById("edit-btn").onclick = goEdit;
+    document.getElementById("edit-btn2").onclick = goEdit;
+    document.getElementById("delete-btn").onclick = () => { deleteItem(state.activeItem.id); state.view = "browse"; render(); };
+  } else if (state.view === "form") {
+    const f = state.activeItem;
+    document.getElementById("theme-toggle-form").onclick = toggleDark;
+    document.getElementById("cancel-btn").onclick = () => { state.view = state.editingId ? "detail" : "browse"; render(); };
+    document.getElementById("f-category").onchange = (e) => {
+      f.category = e.target.value;
+      if (f.category !== "Sweaters") f.subcategory = "";
+      render();
+    };
+    const subSelect = document.getElementById("f-subcategory");
+    if (subSelect) subSelect.onchange = (e) => f.subcategory = e.target.value;
+    (function setupBrandAutocomplete() {
+      const input = document.getElementById("f-brand");
+      const box = document.getElementById("brand-suggestions");
+      input.oninput = (e) => {
+        f.brand = e.target.value;
+        const q = e.target.value.trim().toLowerCase();
+        if (!q) { box.classList.remove("show"); box.innerHTML = ""; return; }
+        const matches = state.taxonomy.brands.filter(b => b.toLowerCase().includes(q) && b.toLowerCase() !== q).slice(0, 6);
+        if (!matches.length) { box.classList.remove("show"); box.innerHTML = ""; return; }
+        box.innerHTML = matches.map(b => `<div data-pick="${esc(b)}">${esc(b)}</div>`).join("");
+        box.classList.add("show");
+        box.querySelectorAll("[data-pick]").forEach(el => el.onclick = () => {
+          input.value = el.dataset.pick;
+          f.brand = el.dataset.pick;
+          box.classList.remove("show");
+          box.innerHTML = "";
+        });
+      };
+      input.onblur = () => setTimeout(() => box.classList.remove("show"), 150);
+      input.onfocus = (e) => { if (e.target.value.trim()) input.oninput(e); };
+    })();
+    document.getElementById("f-size").oninput = (e) => f.size = e.target.value;
+    document.querySelectorAll("[data-color]").forEach(el => el.onclick = () => {
+      const name = el.dataset.color;
+      const idx = f.colors.indexOf(name);
+      if (idx >= 0) f.colors.splice(idx,1); else f.colors.push(name);
+      render();
+    });
+    document.getElementById("add-fabric").onclick = () => { f.fabric.push({material:""}); render(); };
+    document.querySelectorAll("[data-rmfabric]").forEach(el => el.onclick = () => { f.fabric.splice(+el.dataset.rmfabric,1); render(); });
+    document.querySelectorAll("[data-fabric-material]").forEach(el => el.oninput = (e) => f.fabric[+el.dataset.fabricMaterial].material = e.target.value);
+    document.querySelectorAll("[data-rmphoto]").forEach(el => el.onclick = () => { f.photos.splice(+el.dataset.rmphoto,1); render(); });
+    document.getElementById("photo-add-btn").onclick = () => document.getElementById("photo-input").click();
+    document.getElementById("photo-input").onchange = async (e) => {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+      try {
+        const compressed = await Promise.all(files.map(file => compressImage(file, 900, 0.55)));
+        f.photos.push(...compressed);
+        render();
+      } catch (err) {
+        alert("Could not process that photo: " + (err && err.message ? err.message : "unknown error") + ". Try JPEG or PNG.");
+      }
+    };
+    document.getElementById("save-btn").onclick = () => {
+      saveItem(f);
+      state.activeItem = f;
+      state.view = "detail";
+      render();
+    };
+  }
+}
+
+function exportData() {
+  const payload = { exportedAt: new Date().toISOString(), itemCount: state.items.length, taxonomy: state.taxonomy, items: state.items };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const stamp = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = `closet-case-backup-${stamp}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  showToast("Backup downloaded");
+}
+
+function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      const imported = Array.isArray(parsed.items) ? parsed.items : [];
+      if (!imported.length) { showToast("No items found in file"); return; }
+      imported.forEach(it => {
+        migrateItemCategory(it);
+        store.set("item:" + it.id, JSON.stringify(it));
+      });
+      if (parsed.taxonomy) { state.taxonomy = mergeTaxonomy(parsed.taxonomy); saveTaxonomy(); }
+      const byId = new Map(state.items.map(i => [i.id, i]));
+      imported.forEach(it => byId.set(it.id, it));
+      state.items = Array.from(byId.values()).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+      showToast(`Imported ${imported.length} item(s)`);
+      render();
+    } catch { showToast("Could not read that file"); }
+  };
+  reader.readAsText(file);
+}
+
+loadAll();
+render();
+initOneDrive();
+</script>
+</body>
+</html>
