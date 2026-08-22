@@ -241,7 +241,13 @@ async function testOneDriveConnection() {
     if (res.ok) {
       showToast("OneDrive connected");
     } else {
-      showToast("OneDrive connected, but a test call failed (status " + res.status + ")");
+      let detail = "";
+      try {
+        const body = await res.json();
+        detail = (body && body.error && body.error.message) ? body.error.message : JSON.stringify(body);
+      } catch { detail = "(no error details returned)"; }
+      console.error("OneDrive test call failed:", res.status, detail);
+      showToast("OneDrive test failed (" + res.status + "): " + detail);
     }
   } catch (err) {
     showToast("OneDrive connection test failed: " + (err && err.message ? err.message : "unknown error"));
@@ -575,7 +581,7 @@ function attachHandlers() {
     document.getElementById("import-file").onchange = handleImport;
     document.getElementById("onedrive-btn").onclick = () => {
       if (state.oneDriveAccount) {
-        showToast("Connected as " + state.oneDriveAccount);
+        testOneDriveConnection();
       } else {
         connectOneDrive();
       }
