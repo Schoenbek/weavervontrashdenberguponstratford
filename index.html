@@ -247,7 +247,7 @@ async function testOneDriveConnection() {
         detail = (body && body.error && body.error.message) ? body.error.message : JSON.stringify(body);
       } catch { detail = "(no error details returned)"; }
       console.error("OneDrive test call failed:", res.status, detail);
-      showToast("OneDrive test failed (" + res.status + "): " + detail);
+      alert("OneDrive test failed (" + res.status + "):\n\n" + detail);
     }
   } catch (err) {
     showToast("OneDrive connection test failed: " + (err && err.message ? err.message : "unknown error"));
